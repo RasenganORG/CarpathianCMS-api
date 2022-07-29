@@ -36,11 +36,14 @@ export const createUser = async (req, res) => {
         let responseData = await response.json()
         await firestore.collection('users').doc(`${responseData.localId}`).set({
             email: data.email,
-            role: data.role,
+            role: data.role ?? 'user',
             firstName:data.firstName,
             lastName:data.lastName
         });
-        res.send(responseData);
+        res.send({
+            data:data,
+            ...responseData
+        });
     } catch (error) {
         res.status(400).send(error.message);
     }
