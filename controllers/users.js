@@ -1,10 +1,7 @@
-import {v4 as uuid} from 'uuid';
 import firebase from '../db.js'
 import fetch from "node-fetch";
 const firestore = firebase.firestore()
-import {collection, getDocs} from "firebase/firestore";
 import User from "../models/user.js";
-import axios from "axios";
 
 const {
     PORT,
@@ -37,11 +34,11 @@ export const createUser = async (req, res) => {
         await firestore.collection('users').doc(`${responseData.localId}`).set({
             email: data.email,
             role: data.role ?? 'user',
-            firstName:data.firstName,
-            lastName:data.lastName
+            firstName: data.firstName,
+            lastName: data.lastName
         });
         res.send({
-            data:data,
+            data: data,
             ...responseData
         });
     } catch (error) {
@@ -52,7 +49,7 @@ export const createUser = async (req, res) => {
 export const logInUser = async (req, res) => {
     const data = req.body;
 
-    try{
+    try {
         let response = await fetch(`https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=${API_KEY}`,
             {
                 method: 'POST',
@@ -78,10 +75,36 @@ export const logInUser = async (req, res) => {
                 ...responseData
             });
         }
+    } catch (error) {
+        res.status(400).send(error.message);
+    }
+}
+
+export const refreshToken = async (req, res) => {
+    try {
+        let data = req.body;
+        console.log(data)
+        const myHeaders = {"Content-Type": "application/x-www-form-urlencoded"};
+
+        let urlencoded = new URLSearchParams();
+        urlencoded.append("grant_type", "refresh_token");
+        urlencoded.append("refresh_token", data.refreshToken);
+        let requestOptions = {
+            method: 'POST',
+            headers: myHeaders,
+            body: urlencoded,
+            redirect: 'follow'
+        };
+
+        const response = await fetch(`https://securetoken.googleapis.com/v1/token?key=${API_KEY}`, requestOptions)
+            .then(response => response.text())
+
+        res.send(response)
     }
     catch (error){
         res.status(400).send(error.message);
     }
+
 }
 
 export const getUsers = async (req, res) => {
@@ -111,7 +134,7 @@ export const getUsers = async (req, res) => {
 
 export const getUser = async (req, res) => {
     try {
-        const id = req.params.id ;
+        const id = req.params.id;
         const user = await firestore.collection('users').doc(id);
         const data = await user.get();
         if (!data.exists) {
