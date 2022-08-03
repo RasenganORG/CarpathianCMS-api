@@ -30,10 +30,10 @@ export const createUser = async (req, res) => {
                 }
             }
         );
+        data.role ? null : data.role = 'user'
         let responseData = await response.json()
         await firestore.collection('users').doc(`${responseData.localId}`).set({
             email: data.email,
-            role: data.role ?? 'user',
             firstName: data.firstName,
             lastName: data.lastName
         });
@@ -83,7 +83,6 @@ export const logInUser = async (req, res) => {
 export const refreshToken = async (req, res) => {
     try {
         let data = req.body;
-        console.log(data)
         const myHeaders = {"Content-Type": "application/x-www-form-urlencoded"};
 
         let urlencoded = new URLSearchParams();
