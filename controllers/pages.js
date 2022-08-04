@@ -19,7 +19,7 @@ const {
 export const addNewPage = async (req, res) => {
     try {
         const data = req.body;
-        let siteId = data.siteId ?? '123';
+        let siteId = req.params.siteId
         const pageRef = await firestore.collection("sites")
             .doc(siteId)
             .collection('pages')
@@ -33,9 +33,10 @@ export const addNewPage = async (req, res) => {
 
 export const getPage = async (req, res) => {
     try {
-        const data = req.body;
-        const pageId = data.pageId;
-        const siteId = data.siteId;
+        const params = req.params;
+        console.log(params)
+        const pageId = params.pageId;
+        const siteId = params.siteId;
         const pageRef = await firestore.collection('sites')
             .doc(siteId)
             .collection('pages')
@@ -55,9 +56,8 @@ export const getPage = async (req, res) => {
 export const getPagesBySiteId = async (req, res) => {
     try {
         let responseArray = []
-        const data = req.body;
-        const id = data.siteId;
-        const pagesRef = firestore.collection('sites').doc(id).collection('pages');
+        const siteId = req.params.siteId;
+        const pagesRef = firestore.collection('sites').doc(siteId).collection('pages');
         const querySnapshot = await pagesRef.get()
         if (querySnapshot.empty) {
             res.status(404).send("Page not found")
@@ -79,8 +79,8 @@ export const getPagesBySiteId = async (req, res) => {
 
 export const updatePage = async (req, res) => {
     try {
-        const siteId = req.body.siteId
-        const pageId = req.body.pageId
+        const siteId = req.params.siteId
+        const pageId = req.params.pageId
         const data = req.body.data
         const pageRef = await firestore.collection('sites')
             .doc(siteId)
@@ -95,8 +95,8 @@ export const updatePage = async (req, res) => {
 
 export const deletePage  = async (req, res) => {
     try {
-        const siteId = req.body.siteId
-        const pageId = req.body.pageId
+        const siteId = req.params.siteId
+        const pageId = req.params.pageId
         await firestore.collection('sites')
             .doc(siteId)
             .collection('pages')
