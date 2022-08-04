@@ -1,7 +1,7 @@
 import firebase from '../db.js'
 import fetch from "node-fetch";
 const firestore = firebase.firestore()
-import Page from '../controllers/pages'
+//import Page from '../controllers/pages'
 
 const {
     PORT,
