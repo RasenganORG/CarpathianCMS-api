@@ -1,4 +1,4 @@
- class User {
+class User {
     constructor(id, firstName, lastName, age ) {
         this.id = id;
         this.firstName = firstName;

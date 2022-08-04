@@ -47,9 +47,9 @@ export const createUser = async (req, res) => {
 };
 
 export const logInUser = async (req, res) => {
-    const data = req.body;
 
     try {
+        const data = req.body;
         let response = await fetch(`https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=${API_KEY}`,
             {
                 method: 'POST',
