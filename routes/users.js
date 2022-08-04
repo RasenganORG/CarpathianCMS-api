@@ -4,11 +4,11 @@ import {getUsers, createUser, getUser, deleteUser, updateUser, logInUser, refres
 
 const router = express.Router();
 
-router.post('/create-user', createUser);
+router.post('/createUser', createUser);
 
-router.post('/login-user', logInUser);
+router.post('/loginUser', logInUser);
 
-router.post('/refresh-token', refreshToken);
+router.post('/refreshToken', refreshToken);
 
 router.get('/', getUsers);
 
