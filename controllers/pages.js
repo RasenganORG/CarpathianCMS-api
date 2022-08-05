@@ -1,6 +1,7 @@
 import firebase from '../db.js'
 import fetch from "node-fetch";
 import {collection, query, where, getDocs} from "firebase/firestore";
+import PageResponse from "../models/pageResponse.js";
 
 
 const firestore = firebase.firestore()
@@ -24,10 +25,24 @@ export const addNewPage = async (req, res) => {
             .doc(siteId)
             .collection('pages')
             .doc();
-        await pageRef.create(data);
-        res.status(200).send("Page created successfully");
+        const response = await pageRef.create(data);
+
+        res.status(201).send(new PageResponse(
+            'success',
+            pageRef.id,
+            "Page created successfully",
+            data,
+            response.writeTime.seconds
+        ));
     } catch (error) {
         res.status(400).send(error.message);
+        res.status(400).send(new PageResponse(
+            'error',
+            'empty',
+            "Error while creating a new page",
+            error.message,
+            Date.now()
+        ));
     }
 }
 
@@ -45,7 +60,13 @@ export const getPage = async (req, res) => {
         if (!pageData.exists) {
             res.status(404).send('Page with the given ID not found');
         } else {
-            res.send(pageData.data());
+            res.status(201).send(new PageResponse(
+                'success',
+                pageRef.id,
+                "Page retrieved successfully",
+                pageData.data(),
+                pageData.readTime.seconds
+            ));
         }
 
     } catch (error) {
@@ -68,7 +89,14 @@ export const getPagesBySiteId = async (req, res) => {
                     data: doc.data()
                 })
             });
-            res.send(responseArray)
+            res.status(201).send(new PageResponse(
+                'success',
+                'empty',
+                "Pages retrieved successfully",
+                responseArray,
+                querySnapshot.readTime.seconds,
+
+            ));
         }
 
     } catch (error) {
@@ -86,8 +114,15 @@ export const updatePage = async (req, res) => {
             .doc(siteId)
             .collection('pages')
             .doc(pageId)
-        await pageRef.update(data);
-        res.send('User record updated successfully');
+        const response = await pageRef.update(data);
+        res.status(201).send(new PageResponse(
+            'success',
+            pageRef.id,
+            "Page updated successfully",
+            data,
+            response.writeTime.seconds
+        ));
+
     } catch (error) {
         res.status(400).send(error.message);
     }
@@ -97,12 +132,18 @@ export const deletePage  = async (req, res) => {
     try {
         const siteId = req.params.siteId
         const pageId = req.params.pageId
-        await firestore.collection('sites')
+        const response = await firestore.collection('sites')
             .doc(siteId)
             .collection('pages')
             .doc(pageId)
             .delete();
-        res.send('Page deleted successfully');
+        res.status(201).send(new PageResponse(
+            'success',
+            'empty',
+            "Page deleted successfully",
+            'empty',
+            response.writeTime.seconds
+        ));;
     } catch (error) {
         res.status(400).send(error.message);
     }
