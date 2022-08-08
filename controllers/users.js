@@ -2,6 +2,7 @@ import firebase from '../db.js'
 import fetch from "node-fetch";
 const firestore = firebase.firestore()
 import User from "../models/user.js";
+import PageResponse from "../models/pageResponse.js";
 
 const {
     PORT,
@@ -42,7 +43,13 @@ export const createUser = async (req, res) => {
             ...responseData
         });
     } catch (error) {
-        res.status(400).send(error.message);
+        res.status(400).send(new PageResponse(
+            'error',
+            'empty',
+            "Error while trying to create the new account",
+            error.message,
+            Date.now()
+        ));
     }
 };
 
@@ -68,7 +75,13 @@ export const logInUser = async (req, res) => {
         const userRef = await firestore.collection('users').doc(responseData.localId);
         const userData = await userRef.get();
         if (!userData.exists) {
-            res.status(404).send('User with the given ID not found');
+            res.status(400).send(new PageResponse(
+                'error',
+                'empty',
+                'User with the given ID not found',
+                'empty',
+                Date.now()
+            ));
         } else {
             res.send({
                 data: userData.data(),
@@ -76,7 +89,13 @@ export const logInUser = async (req, res) => {
             });
         }
     } catch (error) {
-        res.status(400).send(error.message);
+        res.status(400).send(new PageResponse(
+            'error',
+            'empty',
+            "Error while trying to log in the requested user",
+            error.message,
+            Date.now()
+        ));
     }
 }
 
@@ -101,7 +120,13 @@ export const refreshToken = async (req, res) => {
         res.send(response)
     }
     catch (error){
-        res.status(400).send(error.message);
+        res.status(400).send(new PageResponse(
+            'error',
+            'empty',
+            "Error while trying to generate a new refresh token",
+            error.message,
+            Date.now()
+        ));
     }
 
 }
@@ -127,7 +152,13 @@ export const getUsers = async (req, res) => {
             res.send(userArray);
         }
     } catch (error) {
-        res.status(400).send(error.message);
+        res.status(400).send(new PageResponse(
+            'error',
+            'empty',
+            "Error while trying to retrieve the requested users data",
+            error.message,
+            Date.now()
+        ));
     }
 }
 
@@ -142,7 +173,13 @@ export const getUser = async (req, res) => {
             res.send(data.data());
         }
     } catch (error) {
-        res.status(400).send(error.message);
+        res.status(400).send(new PageResponse(
+            'error',
+            'empty',
+            "Error while trying to retrieve the requested user data",
+            error.message,
+            Date.now()
+        ));
     }
 };
 
@@ -154,7 +191,13 @@ export const updateUser = async (req, res) => {
         await user.update(data);
         res.send('User record updated successfully');
     } catch (error) {
-        res.status(400).send(error.message);
+        res.status(400).send(new PageResponse(
+            'error',
+            'empty',
+            "Error while trying to update the requested user",
+            error.message,
+            Date.now()
+        ));
     }
 };
 
@@ -164,7 +207,13 @@ export const deleteUser = async (req, res) => {
         await firestore.collection('users').doc(id).delete();
         res.send('User deleted successfully');
     } catch (error) {
-        res.status(400).send(error.message);
+        res.status(400).send(new PageResponse(
+            'error',
+            'empty',
+            "Error while trying to delete the requested user",
+            error.message,
+            Date.now()
+        ));
     }
 };
 

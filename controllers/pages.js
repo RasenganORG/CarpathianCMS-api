@@ -1,11 +1,7 @@
 import firebase from '../db.js'
-import fetch from "node-fetch";
-import {collection, query, where, getDocs} from "firebase/firestore";
 import PageResponse from "../models/pageResponse.js";
 
-
 const firestore = firebase.firestore()
-//import Page from '../controllers/pages'
 
 const {
     PORT,
@@ -35,7 +31,6 @@ export const addNewPage = async (req, res) => {
             response.writeTime.seconds
         ));
     } catch (error) {
-        res.status(400).send(error.message);
         res.status(400).send(new PageResponse(
             'error',
             'empty',
@@ -70,7 +65,13 @@ export const getPage = async (req, res) => {
         }
 
     } catch (error) {
-        res.status(400).send(error.message);
+        res.status(400).send(new PageResponse(
+            'error',
+            'empty',
+            "Error while retrieving the requested page",
+            error.message,
+            Date.now()
+        ));
     }
 }
 
@@ -100,7 +101,13 @@ export const getPagesBySiteId = async (req, res) => {
         }
 
     } catch (error) {
-        res.status(400).send(error.message);
+        res.status(400).send(new PageResponse(
+            'error',
+            'empty',
+            "Error while retrieving the requested pages",
+            error.message,
+            Date.now()
+        ));
     }
 }
 
@@ -124,7 +131,13 @@ export const updatePage = async (req, res) => {
         ));
 
     } catch (error) {
-        res.status(400).send(error.message);
+        res.status(400).send(new PageResponse(
+            'error',
+            'empty',
+            "Error while trying to update the requested page",
+            error.message,
+            Date.now()
+        ));
     }
 };
 
@@ -145,7 +158,13 @@ export const deletePage  = async (req, res) => {
             response.writeTime.seconds
         ));;
     } catch (error) {
-        res.status(400).send(error.message);
+        res.status(400).send(new PageResponse(
+            'error',
+            'empty',
+            "Error while trying to delete the requested page",
+            error.message,
+            Date.now()
+        ));
     }
 };
 
