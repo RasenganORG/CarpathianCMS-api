@@ -1,5 +1,6 @@
 import firebase from '../db.js'
 import PageResponse from "../models/pageResponse.js";
+import pages from "../routes/pages.js";
 
 const firestore = firebase.firestore()
 
@@ -82,7 +83,13 @@ export const getPagesBySiteId = async (req, res) => {
         const pagesRef = firestore.collection('sites').doc(siteId).collection('pages');
         const querySnapshot = await pagesRef.get()
         if (querySnapshot.empty) {
-            res.status(404).send("Page not found")
+            res.status(400).send(new PageResponse(
+                'error',
+                'empty',
+                "Pages not found",
+                error.message,
+                Date.now()
+            ));
         } else {
             querySnapshot.forEach((doc) => {
                 responseArray.push({
@@ -105,6 +112,68 @@ export const getPagesBySiteId = async (req, res) => {
             'error',
             'empty',
             "Error while retrieving the requested pages",
+            error.message,
+            Date.now()
+        ));
+    }
+}
+
+export const getNavbarBySiteId = async (req,res) => {
+    try{
+        let responseObject = {}
+        const siteId = req.params.siteId;
+
+
+        const flagRef = firestore.collection('sites').doc(siteId)
+        const result = (await flagRef.get()).data()
+
+        if(result.flagNavBarValid === false) {
+            let pagesArray = []
+            const pagesRef = firestore.collection('sites').doc(siteId).collection('pages');
+            const querySnapshot = await pagesRef.get()
+            if (querySnapshot.empty) {
+                res.status(400).send(new PageResponse(
+                    'error',
+                    'empty',
+                    "Pages not found",
+                    error.message,
+                    Date.now()
+                ));
+            } else {
+                querySnapshot.forEach((doc) => {
+                    pagesArray.push({
+                        id: doc.id,
+                        data: doc.data()
+                    })
+                });
+            }
+
+            responseObject = generateNavBar(pagesArray, 'none')
+
+            await firestore.collection("sites")
+                .doc(siteId).update({
+                    flagNavBarValid: true,
+                    navBar: responseObject
+                })
+        }
+        else{
+            responseObject = result.navBar
+        }
+
+        res.status(201).send(new PageResponse(
+            'success',
+            'empty',
+            "Navbar configuration retrieved successfully",
+            responseObject,
+            Date.now(),
+
+        ));
+    }
+    catch (error){
+        res.status(400).send(new PageResponse(
+            'error',
+            'empty',
+            "Error while trying to retrieve the navbar configuration",
             error.message,
             Date.now()
         ));
@@ -167,4 +236,16 @@ export const deletePage  = async (req, res) => {
         ));
     }
 };
+
+const generateNavBar = (pagesArray, parentId) => {
+    let responseObject = {}
+
+    for(let page of pagesArray){
+        if(page.data.metadata.parent === parentId){
+            let children = generateNavBar(pagesArray, page.id)
+            responseObject[page.id] = {...page.data, children:children}
+        }
+    }
+    return responseObject
+}
 
