@@ -24,6 +24,11 @@ export const addNewPage = async (req, res) => {
             .doc();
         const response = await pageRef.create(data);
 
+        await firestore.collection("sites")
+            .doc(siteId).update({
+                flagNavBarValid: false
+            })
+
         res.status(201).send(new PageResponse(
             'success',
             pageRef.id,
