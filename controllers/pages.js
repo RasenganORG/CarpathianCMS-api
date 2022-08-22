@@ -196,6 +196,10 @@ export const updatePage = async (req, res) => {
             .collection('pages')
             .doc(pageId)
         const response = await pageRef.update(data);
+        await firestore.collection("sites")
+            .doc(siteId).update({
+                flagNavBarValid: false
+            })
         res.status(201).send(new PageResponse(
             'success',
             pageRef.id,
@@ -224,6 +228,10 @@ export const deletePage  = async (req, res) => {
             .collection('pages')
             .doc(pageId)
             .delete();
+        await firestore.collection("sites")
+            .doc(siteId).update({
+                flagNavBarValid: false
+            })
         res.status(201).send(new PageResponse(
             'success',
             'empty',
