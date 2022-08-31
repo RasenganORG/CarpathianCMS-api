@@ -108,7 +108,6 @@ export const getPagesBySiteId = async (req, res) => {
                 "Pages retrieved successfully",
                 responseArray,
                 querySnapshot.readTime.seconds,
-
             ));
         }
 
@@ -123,8 +122,8 @@ export const getPagesBySiteId = async (req, res) => {
     }
 }
 
-export const getNavbarBySiteId = async (req,res) => {
-    try{
+export const getNavbarBySiteId = async (req, res) => {
+    try {
         let responseObject = {}
         const siteId = req.params.siteId;
 
@@ -132,7 +131,7 @@ export const getNavbarBySiteId = async (req,res) => {
         const flagRef = firestore.collection('sites').doc(siteId)
         const result = (await flagRef.get()).data()
 
-        if(result.flagNavBarValid === false) {
+        if (result.flagNavBarValid === false) {
             let pagesArray = []
             const pagesRef = firestore.collection('sites').doc(siteId).collection('pages');
             const querySnapshot = await pagesRef.get()
@@ -160,8 +159,7 @@ export const getNavbarBySiteId = async (req,res) => {
                     flagNavBarValid: true,
                     navBar: responseObject
                 })
-        }
-        else{
+        } else {
             responseObject = result.navBar
         }
 
@@ -171,10 +169,8 @@ export const getNavbarBySiteId = async (req,res) => {
             "Navbar configuration retrieved successfully",
             responseObject,
             Date.now(),
-
         ));
-    }
-    catch (error){
+    } catch (error) {
         res.status(400).send(new PageResponse(
             'error',
             'empty',
@@ -219,15 +215,32 @@ export const updatePage = async (req, res) => {
     }
 };
 
-export const deletePage  = async (req, res) => {
+
+export const deletePage = async (req, res) => {
     try {
         const siteId = req.params.siteId
         const pageId = req.params.pageId
-        const response = await firestore.collection('sites')
+        const pagerRef = await firestore.collection('sites')
             .doc(siteId)
             .collection('pages')
             .doc(pageId)
-            .delete();
+
+        const pageParent = (await pagerRef.get()).data().metadata.parent
+        const navBar = (await firestore.collection('sites').doc(siteId).get()).data().navBar
+        const page = getPageFromNavBar(navBar, pageId)
+        for (let key of Object.keys(page.children)) {
+            let metadata = page.children[key].metadata
+            metadata.parent = pageParent
+            await firestore.collection('sites')
+                .doc(siteId)
+                .collection('pages')
+                .doc(key).update({
+                    "metadata": metadata
+                })
+        }
+
+        const response = await pagerRef.delete()
+
         await firestore.collection("sites")
             .doc(siteId).update({
                 flagNavBarValid: false
@@ -238,7 +251,8 @@ export const deletePage  = async (req, res) => {
             "Page deleted successfully",
             'empty',
             response.writeTime.seconds
-        ));;
+        ));
+        ;
     } catch (error) {
         res.status(400).send(new PageResponse(
             'error',
@@ -250,13 +264,25 @@ export const deletePage  = async (req, res) => {
     }
 };
 
+function getPageFromNavBar(navBar, pageId) {
+    if (Object.keys(navBar).includes(pageId)) {
+        return navBar[pageId]
+    } else {
+        for (let key of Object.keys(navBar)) {
+            if (Object.keys(navBar[key].children).length > 0) {
+                return getPageFromNavBar(navBar[key].children, pageId)
+            }
+        }
+    }
+}
+
 const generateNavBar = (pagesArray, parentId) => {
     let responseObject = {}
 
-    for(let page of pagesArray){
-        if(page.data.metadata.parent === parentId){
+    for (let page of pagesArray) {
+        if (page.data.metadata.parent === parentId) {
             let children = generateNavBar(pagesArray, page.id)
-            responseObject[page.id] = {...page.data, children:children}
+            responseObject[page.id] = {...page.data, children: children}
         }
     }
     return responseObject
