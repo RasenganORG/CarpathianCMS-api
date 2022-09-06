@@ -1,6 +1,15 @@
 import express from 'express';
 
-import {getUsers, createUser, getUser, deleteUser, updateUser, logInUser, refreshToken} from '../controllers/users.js';
+import {
+    getUsers,
+    createUser,
+    getUser,
+    deleteUser,
+    updateUser,
+    logInUser,
+    refreshToken,
+    searchUser
+} from '../controllers/users.js';
 
 const router = express.Router();
 
@@ -17,6 +26,8 @@ router.get('/:id', getUser);
 router.patch('/:id', updateUser);
 
 router.delete('/:id', deleteUser);
+
+router.get('/searchUser/:query', searchUser);
 
 
 

@@ -1,5 +1,6 @@
 import firebase from '../db.js'
 import fetch from "node-fetch";
+
 const firestore = firebase.firestore()
 import User from "../models/user.js";
 import PageResponse from "../models/pageResponse.js";
@@ -38,6 +39,7 @@ export const createUser = async (req, res) => {
             firstName: data.firstName,
             lastName: data.lastName
         });
+
         res.send({
             data: data,
             ...responseData
@@ -118,8 +120,7 @@ export const refreshToken = async (req, res) => {
             .then(response => response.text())
 
         res.send(response)
-    }
-    catch (error){
+    } catch (error) {
         res.status(400).send(new PageResponse(
             'error',
             'empty',
@@ -216,4 +217,47 @@ export const deleteUser = async (req, res) => {
         ));
     }
 };
+
+export const searchUser = async (req, res) => {
+    let userArray = [];
+
+    try {
+        const query = req.params.query
+        const users = await firestore.collection('users');
+        const data = await users.get()
+        if (data.empty) {
+            res.status(404).send('No student record found');
+        } else {
+            data.forEach(doc => {
+                const user = {
+                    id: doc.id,
+                    firstName: doc.data().firstName,
+                    lastName: doc.data().lastName,
+                    role: doc.data().role,
+                    email: doc.data().email
+                }
+                userArray.push(user);
+            });
+            const filteredFirstName = userArray.filter(user => user.firstName.toLowerCase().indexOf(query) !== -1)
+            const filteredLastName = userArray.filter(user => user.lastName.toLowerCase().indexOf(query) !== -1)
+            const filteredEmail = userArray.filter(user => user.email.toLowerCase().indexOf(query) !== -1)
+            const filtered = filteredEmail.concat(filteredFirstName)
+                .concat(filteredLastName)
+                .filter((value, index, self) => {
+                    return self.indexOf(value) === index;
+                })
+
+            res.send(filtered);
+        }
+
+    } catch (error) {
+        res.status(400).send(new PageResponse(
+            'error',
+            'empty',
+            "Error while trying to search the requested user",
+            error.message,
+            Date.now()
+        ));
+    }
+}
 
