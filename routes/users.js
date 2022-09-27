@@ -8,7 +8,8 @@ import {
     updateUser,
     logInUser,
     refreshToken,
-    searchUser
+    searchUser,
+    uploadGoogleAccount
 } from '../controllers/users.js';
 
 const router = express.Router();
@@ -16,6 +17,8 @@ const router = express.Router();
 router.post('/createUser', createUser);
 
 router.post('/loginUser', logInUser);
+
+router.post('/uploadGoogleAccount', uploadGoogleAccount);
 
 router.post('/refreshToken', refreshToken);
 
