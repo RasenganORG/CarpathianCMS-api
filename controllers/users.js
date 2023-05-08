@@ -25,7 +25,7 @@ export const createUser = async (req, res) => {
         body: JSON.stringify({
           email: data.email,
           password: data.password,
-          returnSecureToken: true
+          returnSecureToken: true,
         }),
         headers: {
           'Content-Type': 'application/json'
@@ -37,7 +37,9 @@ export const createUser = async (req, res) => {
     await firestore.collection('users').doc(`${responseData.localId}`).set({
       email: data.email,
       firstName: data.firstName,
-      lastName: data.lastName
+      lastName: data.lastName,
+      isGoogleAccount:false,
+      role:'user',
     });
     
     res.send({
@@ -114,13 +116,27 @@ export const uploadGoogleAccount = async (req, res) => {
     });
     
     if(userData){
-      //create a new account
-      
+      //user already exits, so log him in.
+      console.log("ud", userData)
+      console.log("u", data)
+      userSnap.forEach(async (doc) => {
+        await doc.ref.set({ ['picture']: data.picture }, { merge: true });
+      });
+
     }
-    else{
-      //check if the account in our dataBase is updated, if not, update it
-      
+    else {
+      await firestore.collection('users').doc().set({
+        profilePicture: data.picture,
+        email: data.email,
+        firstName: data.given_name,
+        lastName: data.family_name,
+        isGoogleAccount: true,
+        role: 'user',
+      })
     }
+
+      
+
     
   
     responseData = "d"
