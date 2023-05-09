@@ -17,6 +17,7 @@
     "express": "^4.17.1",
     "firebase": "^9.9.0",
     "firebase-admin": "^11.0.0",
+    "google-auth-library": "^8.8.0",
     "node-fetch": "^3.2.9",
     "uuid": "^8.2.0"
   },

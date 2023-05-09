@@ -4,6 +4,7 @@ import fetch from "node-fetch";
 const firestore = firebase.firestore()
 import User from "../models/user.js";
 import PageResponse from "../models/pageResponse.js";
+import axios from "axios";
 
 const {
   PORT,
@@ -13,6 +14,8 @@ const {
   STORAGE_BUCKET,
   MESSAGING_SENDER_ID,
   APP_ID,
+  CLIENT_ID,
+  CLIENT_SECRET,
 } = process.env;
 
 
@@ -102,30 +105,46 @@ export const logInUser = async (req, res) => {
     ));
   }
 }
-
+function parseJwt (token) {
+  return JSON.parse(Buffer.from(token.split('.')[1], 'base64').toString());
+}
 export const uploadGoogleAccount = async (req, res) => {
   
   try {
+    const tokens = await axios.post("https://oauth2.googleapis.com/token", {
+      'code': req.body.code,
+      'client_id': CLIENT_ID,
+      'client_secret': CLIENT_SECRET,
+      'redirect_uri': 'postmessage',
+      'grant_type': 'authorization_code'
+    });
+    const data = parseJwt(tokens.data.id_token);
+
     let responseData
-    const data = req.body;
+    let userResponseData
+    let localId
+
+    //search user by email in our database
     const userRef = await firestore.collection('users').where("email", "==", data.email);
     const userSnap = await userRef.get()
+
     let userData
     userSnap.forEach(doc => {
       userData = doc.data()
+      localId = doc.id;
     });
-    
+
     if(userData){
-      //user already exits, so log him in.
-      console.log("ud", userData)
-      console.log("u", data)
+      //user already exits, so update his profile.
       userSnap.forEach(async (doc) => {
         await doc.ref.set({ ['picture']: data.picture }, { merge: true });
       });
-
+      userResponseData=userData
     }
     else {
-      await firestore.collection('users').doc().set({
+      //user is new to our database, get his data
+      const docRef = await firestore.collection('users').doc()
+      await docRef.set({
         profilePicture: data.picture,
         email: data.email,
         firstName: data.given_name,
@@ -133,15 +152,27 @@ export const uploadGoogleAccount = async (req, res) => {
         isGoogleAccount: true,
         role: 'user',
       })
+      localId = docRef.id
+      userResponseData={
+        profilePicture: data.picture,
+        email: data.email,
+        firstName: data.given_name,
+        lastName: data.family_name,
+        isGoogleAccount: true,
+        role: 'user',
+      }
     }
 
-      
+    responseData = {
+      kind:'googlelogin',
+      localId:localId,
+      refreshToken:tokens.data.refresh_token,
+      idToken:tokens.data.id_token,
+    }
 
-    
-  
-    responseData = "d"
+
     res.send({
-      data:"dd",
+      data:userResponseData,
       ...responseData
     });
   } catch (error) {
