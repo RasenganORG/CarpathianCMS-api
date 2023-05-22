@@ -28,7 +28,6 @@ export const addNewPage = async (req, res) => {
             .doc(siteId).update({
                 flagNavBarValid: false
             })
-
         res.status(201).send(new PageResponse(
             'success',
             pageRef.id,

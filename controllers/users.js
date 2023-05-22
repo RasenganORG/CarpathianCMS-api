@@ -43,6 +43,7 @@ export const createUser = async (req, res) => {
       lastName: data.lastName,
       isGoogleAccount:false,
       role:'user',
+      specialPermissions:{},
     });
     
     res.send({
@@ -151,6 +152,7 @@ export const uploadGoogleAccount = async (req, res) => {
         lastName: data.family_name,
         isGoogleAccount: true,
         role: 'user',
+        specialPermissions:{},
       })
       localId = docRef.id
       userResponseData={
@@ -160,6 +162,7 @@ export const uploadGoogleAccount = async (req, res) => {
         lastName: data.family_name,
         isGoogleAccount: true,
         role: 'user',
+        specialPermission:{},
       }
     }
 
