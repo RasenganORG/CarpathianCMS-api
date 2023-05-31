@@ -1,8 +1,11 @@
 import firebase from '../db.js'
 import PageResponse from "../models/pageResponse.js";
 import pages from "../routes/pages.js";
+import storage from '@google-cloud/storage'
 
 const firestore = firebase.firestore()
+import { ref, getDownloadURL, uploadBytesResumable } from "firebase/storage";
+
 
 const {
     PORT,
@@ -287,3 +290,60 @@ const generateNavBar = (pagesArray, parentId) => {
     return responseObject
 }
 
+import formidable from "formidable"
+import fs from "fs"
+const bucket = firebase.storage().bucket();
+export const addImage = (req, res) => {
+    const siteId = req.params.siteId
+    const pageId = req.params.pageId
+    const form = formidable({ multiples: false });
+
+    form.parse(req, (err, fields, files) => {
+        if (err) {
+            return res.status(500).json({ message: 'Upload failed' });
+        }
+
+
+        const file = files.filename;
+
+        // Check if a file was submitted
+        if (!file || !file.newFilename || !file.filepath) {
+            return res.status(400).json({ message: 'No file uploaded' });
+        }
+
+        console.log(file)
+
+
+        // Generate a unique file name
+        const fileName = `${file.newFilename}_${file.originalFilename}`;
+
+        // Define the path where the file will be saved in Firebase Storage
+        const storageFilePath = `${siteId}/${pageId}/content/images/${fileName}`;
+
+
+        // Upload the file to Firebase Storage
+        const uploadOptions = {
+            destination: storageFilePath,
+            public: true, // Set to false if you want to restrict access to the file
+        };
+
+        bucket.upload(file.filepath, uploadOptions, (err, uploadedFile) => {
+            if (err) {
+                console.error('Error uploading file:', err);
+                return res.status(500).json({ message: 'Upload failed' });
+            }
+
+            // Delete the temporary file from the local filesystem
+            fs.unlinkSync(file.filepath);
+
+            // Get the public URL of the uploaded file
+            const publicUrl = uploadedFile.publicUrl();
+
+            // Return the public URL in the response
+            res.json({
+                imageUrl: publicUrl,
+                originalFilename: file.originalFilename,
+            });
+        });
+    });
+};
