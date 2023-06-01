@@ -303,7 +303,6 @@ export const addImage = (req, res) => {
             return res.status(500).json({ message: 'Upload failed' });
         }
 
-
         const file = files.filename;
 
         // Check if a file was submitted
@@ -343,7 +342,80 @@ export const addImage = (req, res) => {
             res.json({
                 imageUrl: publicUrl,
                 originalFilename: file.originalFilename,
+                newFilename: fileName,
             });
         });
     });
 };
+
+export async function deleteImage(req,res) {
+    const bucketName = bucket.name;
+
+    const siteId = req.params.siteId
+    const pageId = req.params.pageId
+    const imageName = req.params.imageName
+
+    const storageFilePath = `${siteId}/${pageId}/content/images/${imageName}`
+
+    try {
+        // Deletes the file from the bucket
+        await bucket.file(storageFilePath).delete();
+
+        console.log(`Successfully deleted ${storageFilePath} from ${bucketName}`);
+        res.status(201).send(new PageResponse(
+            'success',
+            'empty',
+            "Image deleted successfully",
+            'empty',
+        ));
+    } catch (error) {
+        console.error(`Failed to remove file: ${storageFilePath}`, error);
+        res.status(400).send(new PageResponse(
+            'error',
+            'empty',
+            "Error while trying to delete the requested image",
+            error.message,
+            Date.now()
+        ));
+    }
+}
+
+export async function getImagesByPage(req,res) {
+
+    const siteId = req.params.siteId
+    const pageId = req.params.pageId
+
+    try {
+        const options = {
+            prefix: `${siteId}/${pageId}/content/images`,
+        };
+
+        const [files] = await bucket.getFiles(options);
+        const imagesList = files.map(file => {
+            return {
+                name: file.name,
+                timeCreated: file.metadata.timeCreated,
+                contentType:file.metadata.contentType,
+                url: file.publicUrl(),
+                size: file.metadata.size,
+                downloadUrl:file.metadata.mediaLink,
+            }
+        });
+
+        res.status(201).send(new PageResponse(
+            'success',
+            'empty',
+            "Image deleted successfully",
+            imagesList,
+            Date.now()
+        ));
+    } catch (error) {
+        res.status(400).send(new PageResponse(
+            'error',
+            'empty',
+            "Error while trying to delete the requested image",
+            error.message,
+            Date.now()
+        ));
+    }
+}
