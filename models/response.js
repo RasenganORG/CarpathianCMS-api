@@ -1,4 +1,4 @@
-class PageResponse {
+class Response {
     constructor(type,id, message, object, createdAt) {
         this.type = type;
         this.id = id;
@@ -8,4 +8,4 @@ class PageResponse {
     }
 }
 
-export default PageResponse
+export default Response

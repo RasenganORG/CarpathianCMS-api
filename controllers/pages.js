@@ -1,5 +1,5 @@
 import firebase from '../db.js'
-import PageResponse from "../models/pageResponse.js";
+import Response from "../models/response.js";
 import pages from "../routes/pages.js";
 import storage from '@google-cloud/storage'
 
@@ -31,7 +31,7 @@ export const addNewPage = async (req, res) => {
             .doc(siteId).update({
                 flagNavBarValid: false
             })
-        res.status(201).send(new PageResponse(
+        res.status(201).send(new Response(
             'success',
             pageRef.id,
             "Page created successfully",
@@ -39,7 +39,7 @@ export const addNewPage = async (req, res) => {
             response.writeTime.seconds
         ));
     } catch (error) {
-        res.status(400).send(new PageResponse(
+        res.status(400).send(new Response(
             'error',
             'empty',
             "Error while creating a new page",
@@ -63,7 +63,7 @@ export const getPage = async (req, res) => {
         if (!pageData.exists) {
             res.status(404).send('Page with the given ID not found');
         } else {
-            res.status(201).send(new PageResponse(
+            res.status(201).send(new Response(
                 'success',
                 pageRef.id,
                 "Page retrieved successfully",
@@ -73,7 +73,7 @@ export const getPage = async (req, res) => {
         }
 
     } catch (error) {
-        res.status(400).send(new PageResponse(
+        res.status(400).send(new Response(
             'error',
             'empty',
             "Error while retrieving the requested page",
@@ -90,7 +90,7 @@ export const getPagesBySiteId = async (req, res) => {
         const pagesRef = firestore.collection('sites').doc(siteId).collection('pages');
         const querySnapshot = await pagesRef.get()
         if (querySnapshot.empty) {
-            res.status(400).send(new PageResponse(
+            res.status(400).send(new Response(
                 'error',
                 'empty',
                 "Pages not found",
@@ -104,7 +104,7 @@ export const getPagesBySiteId = async (req, res) => {
                     data: doc.data()
                 })
             });
-            res.status(201).send(new PageResponse(
+            res.status(201).send(new Response(
                 'success',
                 'empty',
                 "Pages retrieved successfully",
@@ -114,7 +114,7 @@ export const getPagesBySiteId = async (req, res) => {
         }
 
     } catch (error) {
-        res.status(400).send(new PageResponse(
+        res.status(400).send(new Response(
             'error',
             'empty',
             "Error while retrieving the requested pages",
@@ -138,7 +138,7 @@ export const getNavbarBySiteId = async (req, res) => {
             const pagesRef = firestore.collection('sites').doc(siteId).collection('pages');
             const querySnapshot = await pagesRef.get()
             if (querySnapshot.empty) {
-                res.status(400).send(new PageResponse(
+                res.status(400).send(new Response(
                     'error',
                     'empty',
                     "Pages not found",
@@ -165,7 +165,7 @@ export const getNavbarBySiteId = async (req, res) => {
             responseObject = result.navBar
         }
 
-        res.status(201).send(new PageResponse(
+        res.status(201).send(new Response(
             'success',
             'empty',
             "Navbar configuration retrieved successfully",
@@ -173,7 +173,7 @@ export const getNavbarBySiteId = async (req, res) => {
             Date.now(),
         ));
     } catch (error) {
-        res.status(400).send(new PageResponse(
+        res.status(400).send(new Response(
             'error',
             'empty',
             "Error while trying to retrieve the navbar configuration",
@@ -198,7 +198,7 @@ export const updatePage = async (req, res) => {
             .doc(siteId).update({
                 flagNavBarValid: false
             })
-        res.status(201).send(new PageResponse(
+        res.status(201).send(new Response(
             'success',
             pageRef.id,
             "Page updated successfully",
@@ -207,7 +207,7 @@ export const updatePage = async (req, res) => {
         ));
 
     } catch (error) {
-        res.status(400).send(new PageResponse(
+        res.status(400).send(new Response(
             'error',
             'empty',
             "Error while trying to update the requested page",
@@ -247,7 +247,7 @@ export const deletePage = async (req, res) => {
             .doc(siteId).update({
                 flagNavBarValid: false
             })
-        res.status(201).send(new PageResponse(
+        res.status(201).send(new Response(
             'success',
             'empty',
             "Page deleted successfully",
@@ -256,7 +256,7 @@ export const deletePage = async (req, res) => {
         ));
         ;
     } catch (error) {
-        res.status(400).send(new PageResponse(
+        res.status(400).send(new Response(
             'error',
             'empty',
             "Error while trying to delete the requested page",
@@ -293,6 +293,7 @@ const generateNavBar = (pagesArray, parentId) => {
 import formidable from "formidable"
 import fs from "fs"
 const bucket = firebase.storage().bucket();
+
 export const addImage = (req, res) => {
     const siteId = req.params.siteId
     const pageId = req.params.pageId
@@ -362,7 +363,7 @@ export async function deleteImage(req,res) {
         await bucket.file(storageFilePath).delete();
 
         console.log(`Successfully deleted ${storageFilePath} from ${bucketName}`);
-        res.status(201).send(new PageResponse(
+        res.status(201).send(new Response(
             'success',
             'empty',
             "Image deleted successfully",
@@ -370,7 +371,7 @@ export async function deleteImage(req,res) {
         ));
     } catch (error) {
         console.error(`Failed to remove file: ${storageFilePath}`, error);
-        res.status(400).send(new PageResponse(
+        res.status(400).send(new Response(
             'error',
             'empty',
             "Error while trying to delete the requested image",
@@ -402,7 +403,7 @@ export async function getImagesByPage(req,res) {
             }
         });
 
-        res.status(201).send(new PageResponse(
+        res.status(201).send(new Response(
             'success',
             'empty',
             "Image deleted successfully",
@@ -410,7 +411,7 @@ export async function getImagesByPage(req,res) {
             Date.now()
         ));
     } catch (error) {
-        res.status(400).send(new PageResponse(
+        res.status(400).send(new Response(
             'error',
             'empty',
             "Error while trying to delete the requested image",

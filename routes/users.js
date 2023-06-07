@@ -9,7 +9,9 @@ import {
     logInUser,
     refreshToken,
     searchUser,
-    uploadGoogleAccount
+    uploadGoogleAccount,
+    addUserProfilePicture,
+    deleteImage
 } from '../controllers/users.js';
 
 const router = express.Router();
@@ -31,6 +33,10 @@ router.patch('/:id', updateUser);
 router.delete('/:id', deleteUser);
 
 router.get('/searchUser/:query', searchUser);
+
+router.post('/profilePicture/:userId', addUserProfilePicture);
+
+router.delete('/profilePicture/:userId/:imageName', deleteImage);
 
 
 
