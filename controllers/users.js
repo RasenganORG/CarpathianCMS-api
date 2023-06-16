@@ -7,6 +7,8 @@ import Response from "../models/response.js";
 import axios from "axios";
 import formidable from "formidable";
 import fs from "fs";
+import emailClient from "../utils/mailer.js";
+import {getAuth} from "firebase-admin/auth";
 
 const {
     PORT,
@@ -310,7 +312,7 @@ export const updateUser = async (req, res) => {
     }
 };
 
-export const deleteUser = async (req, res) => {
+export const deleteUser = async (re, res) => {
     try {
         const id = req.params.id;
         console.log(id)
@@ -475,4 +477,111 @@ export const searchUser = async (req, res) => {
         ));
     }
 }
+
+export const sendPasswordReset = async (req, res) => {
+    try {
+        const  email  = req.params.email;
+
+        let response = await fetch(`https://identitytoolkit.googleapis.com/v1/accounts:sendOobCode?key=${API_KEY}`,
+            {
+                method: 'POST',
+                body: JSON.stringify({
+                    requestType: "PASSWORD_RESET",
+                    email:email
+                }),
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            }
+        );
+
+        res.send(new Response(
+            'success',
+            {},
+            "Password reset email sent",
+            {},
+            Date.now()
+        ));
+    } catch (error) {
+        res.status(400).send(new Response(
+            'error',
+            'empty',
+            "Error while trying to send password reset email",
+            error.message,
+            Date.now()
+        ));
+    }
+};
+
+export const changePassword = async (req, res) => {
+    try {
+        const newPass  = req.body.newPassword;
+        const oldPass  = req.body.oldPassword;
+        const idToken = req.body.idToken;
+        const email = req.body.email;
+
+        let response = await fetch(`https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=${API_KEY}`,
+            {
+                method: 'POST',
+                body: JSON.stringify({
+                    email: email,
+                    password: oldPass,
+                }),
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            }
+        );
+
+        let responseData = await response.json()
+        console.log("A",responseData)
+        if(responseData.error?.code === 400){
+            res.status(400).send(new Response(
+                'error',
+                'empty',
+                "Old password invalid",
+                Date.now()
+            ));
+        }
+        if(responseData.registered === true) {
+
+            let responseChange = await fetch(`https://identitytoolkit.googleapis.com/v1/accounts:update?key=${API_KEY}`,
+                {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        requestType: "PASSWORD_RESET",
+                        password: newPass,
+                        idToken: responseData.idToken
+                    }),
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                }
+            );
+
+            let responseChangeData = await responseChange.json()
+            console.log("C",responseChangeData)
+            if(responseChangeData){
+                res.send(new Response(
+                    'success',
+                    {},
+                    "Password reset successfully",
+                    {
+                        idToken: responseChangeData.idToken,
+                        localId:responseChangeData.localId
+                    },
+                    Date.now()
+                ));
+            }
+        }
+    } catch (error) {
+        res.status(400).send(new Response(
+            'error',
+            'empty',
+            "Error while trying to reset password",
+            error.message,
+            Date.now()
+        ));
+    }
+};
 

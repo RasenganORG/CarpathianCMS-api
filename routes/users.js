@@ -11,7 +11,9 @@ import {
     searchUser,
     uploadGoogleAccount,
     addUserProfilePicture,
-    deleteImage
+    deleteImage,
+    sendPasswordReset,
+    changePassword
 } from '../controllers/users.js';
 
 const router = express.Router();
@@ -29,6 +31,10 @@ router.get('/', getUsers);
 router.get('/:id', getUser);
 
 router.patch('/:id', updateUser);
+
+router.patch('/resetPassword/:email', sendPasswordReset);
+
+router.put('/changePassword', changePassword);
 
 router.delete('/:id', deleteUser);
 
