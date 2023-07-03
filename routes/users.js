@@ -30,11 +30,11 @@ router.get('/', getUsers);
 
 router.get('/:id', getUser);
 
-router.patch('/:id', updateUser);
+router.put('/:id', updateUser);
 
-router.patch('/resetPassword/:email', sendPasswordReset);
+router.put('/resetPassword/:email', sendPasswordReset);
 
-router.put('/changePassword', changePassword);
+router.post('/changePassword', changePassword);
 
 router.delete('/:id', deleteUser);
 

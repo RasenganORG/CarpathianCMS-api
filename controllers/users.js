@@ -312,23 +312,32 @@ export const updateUser = async (req, res) => {
     }
 };
 
-export const deleteUser = async (re, res) => {
+export const deleteUser = async (req, res) => {
     try {
         const id = req.params.id;
         console.log(id)
         await firestore.collection('users').doc(id).delete();
-        // delete the user from Firebase Authentication
+        //delete the user from Firebase Authentication
         // let response = await fetch(`https://identitytoolkit.googleapis.com/v1/accounts:delete?key=${API_KEY}`, {
         //     method: 'POST',
-        //     body: JSON.stringify({
-        //         localId: id,
-        //     }),
         //     headers: {
         //         'Content-Type': 'application/json'
+        //     },
+        //     body:{
+        //         idToken: id
         //     }
         // });
-
+        //
         // console.log(response)
+
+        getAuth()
+            .deleteUser(id)
+            .then(() => {
+                console.log('Successfully deleted user');
+            })
+            .catch((error) => {
+                console.log('Error deleting user:', error);
+            });
 
         res.send(new Response(
             'success',
@@ -520,6 +529,8 @@ export const changePassword = async (req, res) => {
         const idToken = req.body.idToken;
         const email = req.body.email;
 
+        console.log("new pass", newPass)
+
         let response = await fetch(`https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=${API_KEY}`,
             {
                 method: 'POST',
@@ -535,7 +546,7 @@ export const changePassword = async (req, res) => {
 
         let responseData = await response.json()
         console.log("A",responseData)
-        if(responseData.error?.code === 400){
+         if(responseData.error?.code === 400){
             res.status(400).send(new Response(
                 'error',
                 'empty',
@@ -558,6 +569,7 @@ export const changePassword = async (req, res) => {
                     }
                 }
             );
+
 
             let responseChangeData = await responseChange.json()
             console.log("C",responseChangeData)
